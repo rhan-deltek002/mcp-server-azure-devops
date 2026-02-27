@@ -74,6 +74,12 @@ import {
   handleWikisRequest,
 } from './features/wikis';
 
+import {
+  testPlansTools,
+  isTestPlansRequest,
+  handleTestPlansRequest,
+} from './features/test-plans';
+
 // Create a safe console logging function that won't interfere with MCP protocol
 function safeLog(message: string) {
   process.stderr.write(`${message}\n`);
@@ -121,6 +127,7 @@ export function createAzureDevOpsServer(config: AzureDevOpsConfig): Server {
       ...pullRequestsTools,
       ...pipelinesTools,
       ...wikisTools,
+      ...testPlansTools,
     ];
 
     return { tools };
@@ -330,6 +337,10 @@ export function createAzureDevOpsServer(config: AzureDevOpsConfig): Server {
 
       if (isWikisRequest(request)) {
         return await handleWikisRequest(connection, request);
+      }
+
+      if (isTestPlansRequest(request)) {
+        return await handleTestPlansRequest(connection, request);
       }
 
       // If we get here, the tool is not recognized by any feature handler

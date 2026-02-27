@@ -14,12 +14,14 @@ import {
 export const workItemsTools: ToolDefinition[] = [
   {
     name: 'list_work_items',
-    description: 'List work items in a project',
+    description:
+      'List work items in a project. Do not use this for test plans — use list_test_plans instead.',
     inputSchema: zodToJsonSchema(ListWorkItemsSchema),
   },
   {
     name: 'get_work_item',
-    description: 'Get details of a specific work item',
+    description:
+      'Get details of a specific work item. Do not use this for test plans — use get_test_plan instead.',
     inputSchema: zodToJsonSchema(GetWorkItemSchema),
   },
   {
