@@ -13,6 +13,10 @@ export const ListTestPlansSchema = z.object({
     .string()
     .optional()
     .describe('Filter for test plan by owner ID or name'),
+  continuationToken: z
+    .string()
+    .optional()
+    .describe('Continuation token from a previous response for pagination'),
   includePlanDetails: z
     .boolean()
     .default(false)

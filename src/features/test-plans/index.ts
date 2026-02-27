@@ -214,7 +214,6 @@ export const handleTestPlansRequest: RequestHandler = async (
       const result = await listTestPlans(connection, {
         ...args,
         projectId: args.projectId ?? defaultProject,
-        top: args.top,
       });
       return {
         content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
@@ -261,7 +260,6 @@ export const handleTestPlansRequest: RequestHandler = async (
       const result = await listTestConfigurations(connection, {
         ...args,
         projectId: args.projectId ?? defaultProject,
-        top: args.top,
       });
       return {
         content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
@@ -282,7 +280,6 @@ export const handleTestPlansRequest: RequestHandler = async (
       const result = await listTestVariables(connection, {
         ...args,
         projectId: args.projectId ?? defaultProject,
-        top: args.top,
       });
       return {
         content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],

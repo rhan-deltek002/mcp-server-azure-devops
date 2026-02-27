@@ -4,7 +4,12 @@ import {
   AzureDevOpsAuthenticationError,
   AzureDevOpsResourceNotFoundError,
 } from '../../../shared/errors';
-import { GetSuitesByTestCaseOptions, TestSuite, PagedResult } from '../types';
+import {
+  GetSuitesByTestCaseOptions,
+  TestSuite,
+  PagedResult,
+  slimListItem,
+} from '../types';
 
 /**
  * Find all test suites containing a given test case across all projects
@@ -28,7 +33,9 @@ export async function getSuitesByTestCase(
 
     return {
       count: truncated.length,
-      value: truncated,
+      value: truncated.map((item) =>
+        slimListItem(item as any),
+      ) as unknown as TestSuite[],
       hasMoreResults,
       ...(hasMoreResults
         ? {

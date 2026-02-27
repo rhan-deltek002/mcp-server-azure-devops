@@ -4,7 +4,12 @@ import {
   AzureDevOpsAuthenticationError,
   AzureDevOpsResourceNotFoundError,
 } from '../../../shared/errors';
-import { GetSuiteEntriesOptions, SuiteEntry, PagedResult } from '../types';
+import {
+  GetSuiteEntriesOptions,
+  SuiteEntry,
+  PagedResult,
+  slimListItem,
+} from '../types';
 
 /**
  * Get ordered entries (test cases and child suites) in a suite
@@ -32,7 +37,9 @@ export async function getSuiteEntries(
 
     return {
       count: truncated.length,
-      value: truncated,
+      value: truncated.map((item) =>
+        slimListItem(item as any),
+      ) as unknown as SuiteEntry[],
       hasMoreResults,
       ...(hasMoreResults
         ? {

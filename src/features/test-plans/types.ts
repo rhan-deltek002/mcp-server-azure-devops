@@ -223,7 +223,7 @@ export function slimListItem(obj: Record<string, any>): Record<string, any> {
   // Remove redundant top-level fields
   const {
     _links,
-    links: _links2,
+    links: _links_alt,
     project: _project,
     plan: _plan,
     testPlan: _testPlan,
