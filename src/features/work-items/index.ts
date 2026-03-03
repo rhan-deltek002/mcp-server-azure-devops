@@ -8,6 +8,9 @@ export * from './get-work-item';
 export * from './create-work-item';
 export * from './update-work-item';
 export * from './manage-work-item-link';
+export * from './upload-work-item-attachment';
+export * from './download-work-item-attachment';
+export * from './list-work-item-attachments';
 
 // Export tool definitions
 export * from './tool-definitions';
@@ -26,11 +29,17 @@ import {
   CreateWorkItemSchema,
   UpdateWorkItemSchema,
   ManageWorkItemLinkSchema,
+  UploadWorkItemAttachmentSchema,
+  DownloadWorkItemAttachmentSchema,
+  ListWorkItemAttachmentsSchema,
   listWorkItems,
   getWorkItem,
   createWorkItem,
   updateWorkItem,
   manageWorkItemLink,
+  uploadWorkItemAttachment,
+  downloadWorkItemAttachment,
+  listWorkItemAttachments,
 } from './';
 
 // Define the response type based on observed usage
@@ -51,6 +60,9 @@ export const isWorkItemsRequest: RequestIdentifier = (
     'create_work_item',
     'update_work_item',
     'manage_work_item_link',
+    'upload_work_item_attachment',
+    'download_work_item_attachment',
+    'list_work_item_attachments',
   ].includes(toolName);
 };
 
@@ -137,6 +149,53 @@ export const handleWorkItemsRequest: RequestHandler = async (
           newRelationType: args.newRelationType,
           comment: args.comment,
         },
+      );
+      return {
+        content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+      };
+    }
+    case 'upload_work_item_attachment': {
+      const args = UploadWorkItemAttachmentSchema.parse(
+        request.params.arguments,
+      );
+      const result = await uploadWorkItemAttachment(
+        connection,
+        args.workItemId,
+        args.fileName,
+        args.projectId ?? defaultProject,
+        {
+          filePath: args.filePath,
+          fileContent: args.fileContent,
+          comment: args.comment,
+        },
+      );
+      return {
+        content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+      };
+    }
+    case 'download_work_item_attachment': {
+      const args = DownloadWorkItemAttachmentSchema.parse(
+        request.params.arguments,
+      );
+      const result = await downloadWorkItemAttachment(
+        connection,
+        args.attachmentId,
+        args.projectId ?? defaultProject,
+        args.fileName,
+        args.saveToFile,
+      );
+      return {
+        content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+      };
+    }
+    case 'list_work_item_attachments': {
+      const args = ListWorkItemAttachmentsSchema.parse(
+        request.params.arguments,
+      );
+      const result = await listWorkItemAttachments(
+        connection,
+        args.workItemId,
+        args.projectId ?? defaultProject,
       );
       return {
         content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],

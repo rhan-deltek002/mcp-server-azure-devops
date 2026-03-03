@@ -147,3 +147,68 @@ export const ManageWorkItemLinkSchema = z.object({
     .optional()
     .describe('Optional comment explaining the link'),
 });
+
+/**
+ * Schema for uploading an attachment to a work item
+ */
+export const UploadWorkItemAttachmentSchema = z.object({
+  workItemId: z
+    .number()
+    .describe('The ID of the work item to attach the file to'),
+  fileName: z
+    .string()
+    .describe('The file name with extension (e.g., "report.pdf")'),
+  filePath: z
+    .string()
+    .optional()
+    .describe(
+      'Path to the file to upload. Reads the file as binary directly. Either filePath or fileContent must be provided.',
+    ),
+  fileContent: z
+    .string()
+    .optional()
+    .describe(
+      'Base64-encoded file content. Used when filePath is not provided.',
+    ),
+  comment: z
+    .string()
+    .optional()
+    .describe('Optional comment for the attachment'),
+  projectId: z
+    .string()
+    .optional()
+    .describe(`The ID or name of the project (Default: ${defaultProject})`),
+});
+
+/**
+ * Schema for downloading a work item attachment
+ */
+export const DownloadWorkItemAttachmentSchema = z.object({
+  attachmentId: z.string().describe('The GUID of the attachment to download'),
+  fileName: z
+    .string()
+    .optional()
+    .describe('Optional file name hint for the download'),
+  projectId: z
+    .string()
+    .optional()
+    .describe(`The ID or name of the project (Default: ${defaultProject})`),
+  saveToFile: z
+    .boolean()
+    .optional()
+    .default(true)
+    .describe(
+      'When true (default), saves the attachment to a temp file and returns the file path. When false, returns the content as base64 in the response.',
+    ),
+});
+
+/**
+ * Schema for listing work item attachments
+ */
+export const ListWorkItemAttachmentsSchema = z.object({
+  workItemId: z.number().describe('The ID of the work item'),
+  projectId: z
+    .string()
+    .optional()
+    .describe(`The ID or name of the project (Default: ${defaultProject})`),
+});
