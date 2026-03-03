@@ -7,6 +7,9 @@ This document describes the tools available for working with Azure DevOps work i
 - [`get_work_item`](#get_work_item) - Retrieve a specific work item by ID
 - [`create_work_item`](#create_work_item) - Create a new work item
 - [`list_work_items`](#list_work_items) - List work items in a project
+- [`upload_work_item_attachment`](#upload_work_item_attachment) - Upload a file and attach it to a work item
+- [`download_work_item_attachment`](#download_work_item_attachment) - Download a work item attachment by ID
+- [`list_work_item_attachments`](#list_work_item_attachments) - List all attachments on a work item
 
 ## get_work_item
 
@@ -178,5 +181,153 @@ const result = await callTool('list_work_items', {
   projectId: 'my-project',
   wiql: "SELECT [System.Id] FROM WorkItems WHERE [System.WorkItemType] = 'Task' ORDER BY [System.CreatedDate] DESC",
   top: 10,
+});
+```
+
+## upload_work_item_attachment
+
+Uploads a file and attaches it to a work item. Accepts either a file path (reads binary directly from disk) or base64-encoded content.
+
+### Parameters
+
+| Parameter     | Type   | Required | Description                                                                                   |
+| ------------- | ------ | -------- | --------------------------------------------------------------------------------------------- |
+| `workItemId`  | number | Yes      | The ID of the work item to attach the file to                                                 |
+| `fileName`    | string | Yes      | The file name with extension (e.g., "report.pdf")                                             |
+| `filePath`    | string | No       | Path to the file to upload. Reads the file as binary directly. Either filePath or fileContent must be provided. |
+| `fileContent` | string | No       | Base64-encoded file content. Used when filePath is not provided.                              |
+| `comment`     | string | No       | Optional comment for the attachment                                                           |
+| `projectId`   | string | No       | The ID or name of the project (defaults to env)                                               |
+
+### Response
+
+Returns the attachment reference and updated work item:
+
+```json
+{
+  "attachment": {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "url": "https://dev.azure.com/org/project/_apis/wit/attachments/a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+  },
+  "workItem": {
+    "id": 123,
+    "fields": { "System.Title": "Sample Work Item" }
+  }
+}
+```
+
+### Example Usage
+
+```javascript
+// Upload from a file path (binary — no base64 needed)
+const result = await callTool('upload_work_item_attachment', {
+  workItemId: 123,
+  fileName: 'report.pdf',
+  filePath: '/path/to/report.pdf',
+  comment: 'Monthly report',
+});
+
+// Upload from base64 content
+const result = await callTool('upload_work_item_attachment', {
+  workItemId: 123,
+  fileName: 'notes.txt',
+  fileContent: 'SGVsbG8gV29ybGQ=',
+});
+```
+
+## download_work_item_attachment
+
+Downloads a work item attachment by its ID. By default, saves to a temp file and returns the file path. Set `saveToFile` to `false` to get base64 content instead.
+
+### Parameters
+
+| Parameter      | Type    | Required | Description                                                                                         |
+| -------------- | ------- | -------- | --------------------------------------------------------------------------------------------------- |
+| `attachmentId` | string  | Yes      | The GUID of the attachment to download                                                              |
+| `fileName`     | string  | No       | Optional file name hint for the download                                                            |
+| `projectId`    | string  | No       | The ID or name of the project (defaults to env)                                                     |
+| `saveToFile`   | boolean | No       | When true (default), saves to a temp file and returns the path. When false, returns base64 content.  |
+
+### Response
+
+When `saveToFile` is `true` (default):
+
+```json
+{
+  "attachmentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "fileName": "report.pdf",
+  "filePath": "/tmp/report.pdf",
+  "sizeBytes": 10240
+}
+```
+
+When `saveToFile` is `false`:
+
+```json
+{
+  "attachmentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "fileName": "report.pdf",
+  "contentBase64": "JVBERi0xLjQK...",
+  "sizeBytes": 10240
+}
+```
+
+### Example Usage
+
+```javascript
+// Download to temp file (default)
+const result = await callTool('download_work_item_attachment', {
+  attachmentId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+  fileName: 'report.pdf',
+});
+
+// Download as base64
+const result = await callTool('download_work_item_attachment', {
+  attachmentId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+  saveToFile: false,
+});
+```
+
+## list_work_item_attachments
+
+Lists all attachments on a work item by filtering its relations for `AttachedFile` entries.
+
+### Parameters
+
+| Parameter    | Type   | Required | Description                                       |
+| ------------ | ------ | -------- | ------------------------------------------------- |
+| `workItemId` | number | Yes      | The ID of the work item                           |
+| `projectId`  | string | No       | The ID or name of the project (defaults to env)   |
+
+### Response
+
+Returns an array of attachment metadata objects:
+
+```json
+[
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "url": "https://dev.azure.com/org/project/_apis/wit/attachments/a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "report.pdf",
+    "resourceSize": 10240,
+    "comment": "Monthly report",
+    "resourceCreatedDate": "2026-01-15T10:30:00Z",
+    "resourceModifiedDate": "2026-01-15T10:30:00Z",
+    "authorizedDate": "2026-01-15T10:30:00Z"
+  }
+]
+```
+
+### Error Handling
+
+- Returns `AzureDevOpsResourceNotFoundError` if the work item does not exist
+- Returns `AzureDevOpsAuthenticationError` if authentication fails
+- Returns generic error messages for other failures
+
+### Example Usage
+
+```javascript
+const result = await callTool('list_work_item_attachments', {
+  workItemId: 123,
 });
 ```
