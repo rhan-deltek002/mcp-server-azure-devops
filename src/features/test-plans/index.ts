@@ -4,8 +4,14 @@ export * from './types';
 // Re-export features
 export * from './list-test-plans';
 export * from './get-test-plan';
+export * from './create-test-plan';
+export * from './update-test-plan';
 export * from './list-test-suites';
 export * from './get-test-suite';
+export * from './create-test-suite';
+export * from './update-test-suite';
+export * from './add-test-cases-to-suite';
+export * from './update-suite-test-cases';
 export * from './list-test-configurations';
 export * from './get-test-configuration';
 export * from './list-test-variables';
@@ -36,8 +42,14 @@ import {
 } from '../../shared/types/request-handler';
 import { ListTestPlansSchema } from './list-test-plans';
 import { GetTestPlanSchema } from './get-test-plan';
+import { CreateTestPlanSchema } from './create-test-plan';
+import { UpdateTestPlanSchema } from './update-test-plan';
 import { ListTestSuitesSchema } from './list-test-suites';
 import { GetTestSuiteSchema } from './get-test-suite';
+import { CreateTestSuiteSchema } from './create-test-suite';
+import { UpdateTestSuiteSchema } from './update-test-suite';
+import { AddTestCasesToSuiteSchema } from './add-test-cases-to-suite';
+import { UpdateSuiteTestCasesSchema } from './update-suite-test-cases';
 import { ListTestConfigurationsSchema } from './list-test-configurations';
 import { GetTestConfigurationSchema } from './get-test-configuration';
 import { ListTestVariablesSchema } from './list-test-variables';
@@ -51,8 +63,14 @@ import { GetSuitesByTestCaseSchema } from './get-suites-by-test-case';
 import { GetTestEntityCountsSchema } from './get-test-entity-counts';
 import { listTestPlans } from './list-test-plans';
 import { getTestPlan } from './get-test-plan';
+import { createTestPlan } from './create-test-plan';
+import { updateTestPlan } from './update-test-plan';
 import { listTestSuites } from './list-test-suites';
 import { getTestSuite } from './get-test-suite';
+import { createTestSuite } from './create-test-suite';
+import { updateTestSuite } from './update-test-suite';
+import { addTestCasesToSuite } from './add-test-cases-to-suite';
+import { updateSuiteTestCases } from './update-suite-test-cases';
 import { listTestConfigurations } from './list-test-configurations';
 import { getTestConfiguration } from './get-test-configuration';
 import { listTestVariables } from './list-test-variables';
@@ -185,8 +203,14 @@ export const isTestPlansRequest: RequestIdentifier = (
   return [
     'list_test_plans',
     'get_test_plan',
+    'create_test_plan',
+    'update_test_plan',
     'list_test_suites',
     'get_test_suite',
+    'create_test_suite',
+    'update_test_suite',
+    'add_test_cases_to_suite',
+    'update_suite_test_cases',
     'list_test_configurations',
     'get_test_configuration',
     'list_test_variables',
@@ -229,6 +253,30 @@ export const handleTestPlansRequest: RequestHandler = async (
         content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
       };
     }
+    case 'create_test_plan': {
+      const args = CreateTestPlanSchema.parse(request.params.arguments);
+      const result = await createTestPlan(connection, {
+        ...args,
+        projectId: args.projectId ?? defaultProject,
+        startDate: args.startDate ? new Date(args.startDate) : undefined,
+        endDate: args.endDate ? new Date(args.endDate) : undefined,
+      });
+      return {
+        content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+      };
+    }
+    case 'update_test_plan': {
+      const args = UpdateTestPlanSchema.parse(request.params.arguments);
+      const result = await updateTestPlan(connection, {
+        ...args,
+        projectId: args.projectId ?? defaultProject,
+        startDate: args.startDate ? new Date(args.startDate) : undefined,
+        endDate: args.endDate ? new Date(args.endDate) : undefined,
+      });
+      return {
+        content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+      };
+    }
     case 'list_test_suites': {
       const args = ListTestSuitesSchema.parse(request.params.arguments);
       const result = await listTestSuites(connection, {
@@ -250,6 +298,46 @@ export const handleTestPlansRequest: RequestHandler = async (
         planId: args.planId,
         suiteId: args.suiteId,
         expand: parseSuiteExpand(args.expand),
+      });
+      return {
+        content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+      };
+    }
+    case 'create_test_suite': {
+      const args = CreateTestSuiteSchema.parse(request.params.arguments);
+      const result = await createTestSuite(connection, {
+        ...args,
+        projectId: args.projectId ?? defaultProject,
+      });
+      return {
+        content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+      };
+    }
+    case 'update_test_suite': {
+      const args = UpdateTestSuiteSchema.parse(request.params.arguments);
+      const result = await updateTestSuite(connection, {
+        ...args,
+        projectId: args.projectId ?? defaultProject,
+      });
+      return {
+        content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+      };
+    }
+    case 'add_test_cases_to_suite': {
+      const args = AddTestCasesToSuiteSchema.parse(request.params.arguments);
+      const result = await addTestCasesToSuite(connection, {
+        ...args,
+        projectId: args.projectId ?? defaultProject,
+      });
+      return {
+        content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+      };
+    }
+    case 'update_suite_test_cases': {
+      const args = UpdateSuiteTestCasesSchema.parse(request.params.arguments);
+      const result = await updateSuiteTestCases(connection, {
+        ...args,
+        projectId: args.projectId ?? defaultProject,
       });
       return {
         content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
