@@ -46,6 +46,38 @@ export interface GetTestPlanOptions {
 }
 
 /**
+ * Options for creating a test plan
+ */
+export interface CreateTestPlanOptions {
+  projectId: string;
+  name: string;
+  iteration: string;
+  areaPath?: string;
+  description?: string;
+  startDate?: Date;
+  endDate?: Date;
+  state?: string;
+  buildId?: number;
+}
+
+/**
+ * Options for updating a test plan
+ */
+export interface UpdateTestPlanOptions {
+  projectId: string;
+  planId: number;
+  name?: string;
+  iteration?: string;
+  areaPath?: string;
+  description?: string;
+  startDate?: Date;
+  endDate?: Date;
+  state?: string;
+  buildId?: number;
+  revision?: number;
+}
+
+/**
  * Options for listing test suites
  */
 export interface ListTestSuitesOptions {
@@ -65,6 +97,59 @@ export interface GetTestSuiteOptions {
   planId: number;
   suiteId: number;
   expand?: SuiteExpand;
+}
+
+/**
+ * Options for creating a test suite
+ */
+export interface CreateTestSuiteOptions {
+  projectId: string;
+  planId: number;
+  name: string;
+  suiteType?: 'staticTestSuite' | 'dynamicTestSuite' | 'requirementTestSuite';
+  parentSuiteId?: number;
+  requirementId?: number;
+  inheritDefaultConfigurations?: boolean;
+  defaultConfigurationIds?: number[];
+}
+
+/**
+ * Options for updating a test suite
+ */
+export interface UpdateTestSuiteOptions {
+  projectId: string;
+  planId: number;
+  suiteId: number;
+  name?: string;
+  inheritDefaultConfigurations?: boolean;
+  defaultConfigurationIds?: number[];
+  revision?: number;
+}
+
+/**
+ * Options for adding test cases to a suite
+ */
+export interface AddTestCasesToSuiteOptions {
+  projectId: string;
+  planId: number;
+  suiteId: number;
+  testCases: Array<{
+    workItemId: number;
+    configurationIds?: number[];
+  }>;
+}
+
+/**
+ * Options for updating test cases in a suite
+ */
+export interface UpdateSuiteTestCasesOptions {
+  projectId: string;
+  planId: number;
+  suiteId: number;
+  testCases: Array<{
+    workItemId: number;
+    configurationIds?: number[];
+  }>;
 }
 
 /**

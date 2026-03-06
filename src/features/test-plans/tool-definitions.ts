@@ -2,8 +2,14 @@ import { zodToJsonSchema } from 'zod-to-json-schema';
 import { ToolDefinition } from '../../shared/types/tool-definition';
 import { ListTestPlansSchema } from './list-test-plans/schema';
 import { GetTestPlanSchema } from './get-test-plan/schema';
+import { CreateTestPlanSchema } from './create-test-plan/schema';
+import { UpdateTestPlanSchema } from './update-test-plan/schema';
 import { ListTestSuitesSchema } from './list-test-suites/schema';
 import { GetTestSuiteSchema } from './get-test-suite/schema';
+import { CreateTestSuiteSchema } from './create-test-suite/schema';
+import { UpdateTestSuiteSchema } from './update-test-suite/schema';
+import { AddTestCasesToSuiteSchema } from './add-test-cases-to-suite/schema';
+import { UpdateSuiteTestCasesSchema } from './update-suite-test-cases/schema';
 import { ListTestConfigurationsSchema } from './list-test-configurations/schema';
 import { GetTestConfigurationSchema } from './get-test-configuration/schema';
 import { ListTestVariablesSchema } from './list-test-variables/schema';
@@ -35,6 +41,19 @@ export const testPlansTools: ToolDefinition[] = [
     mcp_enabled: true,
   },
   {
+    name: 'create_test_plan',
+    description: 'Create a new test plan in a project.',
+    inputSchema: zodToJsonSchema(CreateTestPlanSchema),
+    mcp_enabled: true,
+  },
+  {
+    name: 'update_test_plan',
+    description:
+      'Update an existing test plan (name, dates, state, area path, iteration, etc.).',
+    inputSchema: zodToJsonSchema(UpdateTestPlanSchema),
+    mcp_enabled: true,
+  },
+  {
     name: 'list_test_suites',
     description:
       'List test suites for a test plan (default 50, max 200 per page). Use asTreeView to get the full suite hierarchy. Use this to explore the structure within a test plan.',
@@ -46,6 +65,34 @@ export const testPlansTools: ToolDefinition[] = [
     description:
       'Get a specific test suite by ID. Use expand=children to include child suites in the response.',
     inputSchema: zodToJsonSchema(GetTestSuiteSchema),
+    mcp_enabled: true,
+  },
+  {
+    name: 'create_test_suite',
+    description:
+      'Create a new test suite within a test plan. Supports static, dynamic (query-based), and requirement-based suite types.',
+    inputSchema: zodToJsonSchema(CreateTestSuiteSchema),
+    mcp_enabled: true,
+  },
+  {
+    name: 'update_test_suite',
+    description:
+      'Update an existing test suite (name, default configurations, configuration inheritance).',
+    inputSchema: zodToJsonSchema(UpdateTestSuiteSchema),
+    mcp_enabled: true,
+  },
+  {
+    name: 'add_test_cases_to_suite',
+    description:
+      'Add test cases (by work item ID) to a test suite, optionally assigning configurations.',
+    inputSchema: zodToJsonSchema(AddTestCasesToSuiteSchema),
+    mcp_enabled: true,
+  },
+  {
+    name: 'update_suite_test_cases',
+    description:
+      'Update the configuration assignments for test cases already in a suite.',
+    inputSchema: zodToJsonSchema(UpdateSuiteTestCasesSchema),
     mcp_enabled: true,
   },
   {
