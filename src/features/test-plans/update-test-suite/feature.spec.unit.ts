@@ -43,6 +43,54 @@ describe('updateTestSuite unit', () => {
     );
   });
 
+  test('should map defaultConfigurationIds to defaultConfigurations', async () => {
+    const mockUpdate = jest.fn().mockResolvedValue(mockSuite);
+    const mockConnection: any = {
+      getTestPlanApi: jest
+        .fn()
+        .mockResolvedValue({ updateTestSuite: mockUpdate }),
+    };
+
+    await updateTestSuite(mockConnection, {
+      projectId: 'my-project',
+      planId: 1,
+      suiteId: 10,
+      defaultConfigurationIds: [3, 4],
+    });
+
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        defaultConfigurations: [{ id: 3 }, { id: 4 }],
+      }),
+      'my-project',
+      1,
+      10,
+    );
+  });
+
+  test('should forward revision for optimistic concurrency', async () => {
+    const mockUpdate = jest.fn().mockResolvedValue(mockSuite);
+    const mockConnection: any = {
+      getTestPlanApi: jest
+        .fn()
+        .mockResolvedValue({ updateTestSuite: mockUpdate }),
+    };
+
+    await updateTestSuite(mockConnection, {
+      projectId: 'my-project',
+      planId: 1,
+      suiteId: 10,
+      revision: 3,
+    });
+
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ revision: 3 }),
+      'my-project',
+      1,
+      10,
+    );
+  });
+
   test('should return the updated suite', async () => {
     const result = await updateTestSuite(makeConnection(), {
       projectId: 'my-project',
@@ -54,12 +102,24 @@ describe('updateTestSuite unit', () => {
     expect(result).toEqual(mockSuite);
   });
 
+  test('should throw AzureDevOpsError when API returns null', async () => {
+    await expect(
+      updateTestSuite(makeConnection(null), {
+        projectId: 'my-project',
+        planId: 1,
+        suiteId: 10,
+      }),
+    ).rejects.toThrow(AzureDevOpsError);
+  });
+
   test('should propagate authentication errors', async () => {
     const mockConnection: any = {
       getTestPlanApi: jest.fn().mockResolvedValue({
         updateTestSuite: jest
           .fn()
-          .mockRejectedValue(new Error('Unauthorized access')),
+          .mockRejectedValue(
+            new AzureDevOpsAuthenticationError('Unauthorized'),
+          ),
       }),
     };
 
@@ -77,7 +137,9 @@ describe('updateTestSuite unit', () => {
       getTestPlanApi: jest.fn().mockResolvedValue({
         updateTestSuite: jest
           .fn()
-          .mockRejectedValue(new Error('Suite not found')),
+          .mockRejectedValue(
+            new AzureDevOpsResourceNotFoundError('Suite not found'),
+          ),
       }),
     };
 

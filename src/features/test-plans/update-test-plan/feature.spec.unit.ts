@@ -38,6 +38,27 @@ describe('updateTestPlan unit', () => {
     );
   });
 
+  test('should forward revision for optimistic concurrency', async () => {
+    const mockUpdate = jest.fn().mockResolvedValue(mockPlan);
+    const mockConnection: any = {
+      getTestPlanApi: jest
+        .fn()
+        .mockResolvedValue({ updateTestPlan: mockUpdate }),
+    };
+
+    await updateTestPlan(mockConnection, {
+      projectId: 'my-project',
+      planId: 42,
+      revision: 5,
+    });
+
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ revision: 5 }),
+      'my-project',
+      42,
+    );
+  });
+
   test('should return the updated test plan', async () => {
     const result = await updateTestPlan(makeConnection(), {
       projectId: 'my-project',
@@ -48,12 +69,23 @@ describe('updateTestPlan unit', () => {
     expect(result).toEqual(mockPlan);
   });
 
+  test('should throw AzureDevOpsError when API returns null', async () => {
+    await expect(
+      updateTestPlan(makeConnection(null), {
+        projectId: 'my-project',
+        planId: 42,
+      }),
+    ).rejects.toThrow(AzureDevOpsError);
+  });
+
   test('should propagate authentication errors', async () => {
     const mockConnection: any = {
       getTestPlanApi: jest.fn().mockResolvedValue({
         updateTestPlan: jest
           .fn()
-          .mockRejectedValue(new Error('Unauthorized access')),
+          .mockRejectedValue(
+            new AzureDevOpsAuthenticationError('Unauthorized'),
+          ),
       }),
     };
 
@@ -67,7 +99,9 @@ describe('updateTestPlan unit', () => {
       getTestPlanApi: jest.fn().mockResolvedValue({
         updateTestPlan: jest
           .fn()
-          .mockRejectedValue(new Error('Plan not found')),
+          .mockRejectedValue(
+            new AzureDevOpsResourceNotFoundError('Plan not found'),
+          ),
       }),
     };
 

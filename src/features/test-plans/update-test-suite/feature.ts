@@ -1,32 +1,37 @@
 import { WebApi } from 'azure-devops-node-api';
-import {
-  AzureDevOpsError,
-  AzureDevOpsAuthenticationError,
-  AzureDevOpsResourceNotFoundError,
-} from '../../../shared/errors';
+import { AzureDevOpsError } from '../../../shared/errors';
+import { handleRequestError } from '../../../shared/errors/handle-request-error';
 import { UpdateTestSuiteOptions, TestSuite } from '../types';
 import {
   TestConfigurationReference,
   TestSuiteUpdateParams,
 } from 'azure-devops-node-api/interfaces/TestPlanInterfaces';
 
+/**
+ * Update an existing test suite
+ *
+ * @param connection The Azure DevOps WebApi connection
+ * @param options Options for updating a test suite
+ * @returns The updated test suite
+ */
 export async function updateTestSuite(
   connection: WebApi,
   options: UpdateTestSuiteOptions,
 ): Promise<TestSuite> {
+  const {
+    projectId,
+    planId,
+    suiteId,
+    name,
+    inheritDefaultConfigurations,
+    defaultConfigurationIds,
+    revision,
+  } = options;
+
+  let testSuite;
   try {
     const testPlanApi = await connection.getTestPlanApi();
-    const {
-      projectId,
-      planId,
-      suiteId,
-      name,
-      inheritDefaultConfigurations,
-      defaultConfigurationIds,
-      revision,
-    } = options;
-
-    return await testPlanApi.updateTestSuite(
+    testSuite = await testPlanApi.updateTestSuite(
       {
         name,
         inheritDefaultConfigurations,
@@ -40,34 +45,17 @@ export async function updateTestSuite(
       suiteId,
     );
   } catch (error) {
-    if (error instanceof AzureDevOpsError) {
-      throw error;
-    }
-
-    if (error instanceof Error) {
-      if (
-        error.message.includes('Authentication') ||
-        error.message.includes('Unauthorized') ||
-        error.message.includes('401')
-      ) {
-        throw new AzureDevOpsAuthenticationError(
-          `Failed to authenticate: ${error.message}`,
-        );
-      }
-
-      if (
-        error.message.includes('not found') ||
-        error.message.includes('does not exist') ||
-        error.message.includes('404')
-      ) {
-        throw new AzureDevOpsResourceNotFoundError(
-          `Test suite, plan, or project not found: ${error.message}`,
-        );
-      }
-    }
-
-    throw new AzureDevOpsError(
-      `Failed to update test suite: ${error instanceof Error ? error.message : String(error)}`,
+    return handleRequestError(
+      error,
+      `updating test suite ${suiteId} in plan ${planId} in project "${projectId}"`,
     );
   }
+
+  if (testSuite == null) {
+    throw new AzureDevOpsError(
+      `Failed to update test suite ${suiteId}: API returned no data`,
+    );
+  }
+
+  return testSuite;
 }

@@ -2,6 +2,7 @@ import { createTestPlan } from './feature';
 import {
   AzureDevOpsError,
   AzureDevOpsAuthenticationError,
+  AzureDevOpsResourceNotFoundError,
 } from '../../../shared/errors';
 
 describe('createTestPlan unit', () => {
@@ -54,12 +55,44 @@ describe('createTestPlan unit', () => {
     expect(result).toEqual(mockPlan);
   });
 
+  test('should throw AzureDevOpsError when API returns null', async () => {
+    await expect(
+      createTestPlan(makeConnection(null), {
+        projectId: 'my-project',
+        name: 'New Plan',
+        iteration: 'MyProject\\Sprint 1',
+      }),
+    ).rejects.toThrow(AzureDevOpsError);
+  });
+
+  test('should propagate not found errors', async () => {
+    const mockConnection: any = {
+      getTestPlanApi: jest.fn().mockResolvedValue({
+        createTestPlan: jest
+          .fn()
+          .mockRejectedValue(
+            new AzureDevOpsResourceNotFoundError('Project not found'),
+          ),
+      }),
+    };
+
+    await expect(
+      createTestPlan(mockConnection, {
+        projectId: 'missing-project',
+        name: 'Plan',
+        iteration: 'iter',
+      }),
+    ).rejects.toThrow(AzureDevOpsResourceNotFoundError);
+  });
+
   test('should propagate authentication errors', async () => {
     const mockConnection: any = {
       getTestPlanApi: jest.fn().mockResolvedValue({
         createTestPlan: jest
           .fn()
-          .mockRejectedValue(new Error('Unauthorized access')),
+          .mockRejectedValue(
+            new AzureDevOpsAuthenticationError('Unauthorized'),
+          ),
       }),
     };
 

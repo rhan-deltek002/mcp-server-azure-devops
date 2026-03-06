@@ -15,8 +15,20 @@ export const UpdateTestPlanSchema = z.object({
   iteration: z.string().optional().describe('New iteration path'),
   areaPath: z.string().optional().describe('New area path'),
   description: z.string().optional().describe('New description'),
-  startDate: z.string().optional().describe('New start date (ISO 8601 format)'),
-  endDate: z.string().optional().describe('New end date (ISO 8601 format)'),
+  startDate: z
+    .string()
+    .optional()
+    .refine((val) => val === undefined || !isNaN(new Date(val).getTime()), {
+      message: 'startDate must be a valid date string',
+    })
+    .describe('New start date (ISO 8601 format)'),
+  endDate: z
+    .string()
+    .optional()
+    .refine((val) => val === undefined || !isNaN(new Date(val).getTime()), {
+      message: 'endDate must be a valid date string',
+    })
+    .describe('New end date (ISO 8601 format)'),
   state: z
     .string()
     .optional()

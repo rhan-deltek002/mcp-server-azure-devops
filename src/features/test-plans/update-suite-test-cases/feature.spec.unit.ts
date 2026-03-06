@@ -50,12 +50,25 @@ describe('updateSuiteTestCases unit', () => {
     expect(result).toEqual(mockTestCases);
   });
 
+  test('should throw AzureDevOpsError when API returns null', async () => {
+    await expect(
+      updateSuiteTestCases(makeConnection(null), {
+        projectId: 'my-project',
+        planId: 1,
+        suiteId: 10,
+        testCases: [{ workItemId: 101 }],
+      }),
+    ).rejects.toThrow(AzureDevOpsError);
+  });
+
   test('should propagate authentication errors', async () => {
     const mockConnection: any = {
       getTestPlanApi: jest.fn().mockResolvedValue({
         updateSuiteTestCases: jest
           .fn()
-          .mockRejectedValue(new Error('Unauthorized access')),
+          .mockRejectedValue(
+            new AzureDevOpsAuthenticationError('Unauthorized'),
+          ),
       }),
     };
 
@@ -74,7 +87,9 @@ describe('updateSuiteTestCases unit', () => {
       getTestPlanApi: jest.fn().mockResolvedValue({
         updateSuiteTestCases: jest
           .fn()
-          .mockRejectedValue(new Error('Suite not found')),
+          .mockRejectedValue(
+            new AzureDevOpsResourceNotFoundError('Suite not found'),
+          ),
       }),
     };
 

@@ -1,29 +1,35 @@
 import { WebApi } from 'azure-devops-node-api';
-import {
-  AzureDevOpsError,
-  AzureDevOpsAuthenticationError,
-} from '../../../shared/errors';
+import { AzureDevOpsError } from '../../../shared/errors';
+import { handleRequestError } from '../../../shared/errors/handle-request-error';
 import { CreateTestPlanOptions, TestPlan } from '../types';
 
+/**
+ * Create a new test plan in a project
+ *
+ * @param connection The Azure DevOps WebApi connection
+ * @param options Options for creating a test plan
+ * @returns The created test plan
+ */
 export async function createTestPlan(
   connection: WebApi,
   options: CreateTestPlanOptions,
 ): Promise<TestPlan> {
+  const {
+    projectId,
+    name,
+    iteration,
+    areaPath,
+    description,
+    startDate,
+    endDate,
+    state,
+    buildId,
+  } = options;
+
+  let testPlan;
   try {
     const testPlanApi = await connection.getTestPlanApi();
-    const {
-      projectId,
-      name,
-      iteration,
-      areaPath,
-      description,
-      startDate,
-      endDate,
-      state,
-      buildId,
-    } = options;
-
-    return await testPlanApi.createTestPlan(
+    testPlan = await testPlanApi.createTestPlan(
       {
         name,
         iteration,
@@ -37,24 +43,17 @@ export async function createTestPlan(
       projectId,
     );
   } catch (error) {
-    if (error instanceof AzureDevOpsError) {
-      throw error;
-    }
-
-    if (error instanceof Error) {
-      if (
-        error.message.includes('Authentication') ||
-        error.message.includes('Unauthorized') ||
-        error.message.includes('401')
-      ) {
-        throw new AzureDevOpsAuthenticationError(
-          `Failed to authenticate: ${error.message}`,
-        );
-      }
-    }
-
-    throw new AzureDevOpsError(
-      `Failed to create test plan: ${error instanceof Error ? error.message : String(error)}`,
+    return handleRequestError(
+      error,
+      `creating test plan in project "${projectId}"`,
     );
   }
+
+  if (testPlan == null) {
+    throw new AzureDevOpsError(
+      `Failed to create test plan "${name}": API returned no data`,
+    );
+  }
+
+  return testPlan;
 }

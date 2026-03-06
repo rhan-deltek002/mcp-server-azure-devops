@@ -109,6 +109,7 @@ export interface CreateTestSuiteOptions {
   suiteType?: 'staticTestSuite' | 'dynamicTestSuite' | 'requirementTestSuite';
   parentSuiteId?: number;
   requirementId?: number;
+  queryString?: string;
   inheritDefaultConfigurations?: boolean;
   defaultConfigurationIds?: number[];
 }

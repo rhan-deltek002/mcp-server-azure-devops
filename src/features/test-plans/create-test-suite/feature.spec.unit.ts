@@ -33,7 +33,7 @@ describe('createTestSuite unit', () => {
     });
 
     expect(mockCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ name: 'New Suite' }),
+      expect.objectContaining({ name: 'New Suite', parentSuite: { id: 5 } }),
       'my-project',
       1,
     );
@@ -61,6 +61,83 @@ describe('createTestSuite unit', () => {
     );
   });
 
+  test('should map dynamicTestSuite to DynamicTestSuite enum', async () => {
+    const mockCreate = jest.fn().mockResolvedValue(mockSuite);
+    const mockConnection: any = {
+      getTestPlanApi: jest
+        .fn()
+        .mockResolvedValue({ createTestSuite: mockCreate }),
+    };
+
+    await createTestSuite(mockConnection, {
+      projectId: 'my-project',
+      planId: 1,
+      name: 'Dynamic Suite',
+      suiteType: 'dynamicTestSuite',
+      queryString:
+        'SELECT * FROM WorkItems WHERE [System.WorkItemType] = "Test Case"',
+    });
+
+    // DynamicTestSuite = 1
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        suiteType: 1,
+        queryString:
+          'SELECT * FROM WorkItems WHERE [System.WorkItemType] = "Test Case"',
+      }),
+      'my-project',
+      1,
+    );
+  });
+
+  test('should map requirementTestSuite to RequirementTestSuite enum', async () => {
+    const mockCreate = jest.fn().mockResolvedValue(mockSuite);
+    const mockConnection: any = {
+      getTestPlanApi: jest
+        .fn()
+        .mockResolvedValue({ createTestSuite: mockCreate }),
+    };
+
+    await createTestSuite(mockConnection, {
+      projectId: 'my-project',
+      planId: 1,
+      name: 'Req Suite',
+      suiteType: 'requirementTestSuite',
+      requirementId: 42,
+    });
+
+    // RequirementTestSuite = 3
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ suiteType: 3, requirementId: 42 }),
+      'my-project',
+      1,
+    );
+  });
+
+  test('should map defaultConfigurationIds to defaultConfigurations', async () => {
+    const mockCreate = jest.fn().mockResolvedValue(mockSuite);
+    const mockConnection: any = {
+      getTestPlanApi: jest
+        .fn()
+        .mockResolvedValue({ createTestSuite: mockCreate }),
+    };
+
+    await createTestSuite(mockConnection, {
+      projectId: 'my-project',
+      planId: 1,
+      name: 'Suite',
+      defaultConfigurationIds: [1, 2],
+    });
+
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        defaultConfigurations: [{ id: 1 }, { id: 2 }],
+      }),
+      'my-project',
+      1,
+    );
+  });
+
   test('should return the created suite', async () => {
     const result = await createTestSuite(makeConnection(), {
       projectId: 'my-project',
@@ -71,12 +148,24 @@ describe('createTestSuite unit', () => {
     expect(result).toEqual(mockSuite);
   });
 
+  test('should throw AzureDevOpsError when API returns null', async () => {
+    await expect(
+      createTestSuite(makeConnection(null), {
+        projectId: 'my-project',
+        planId: 1,
+        name: 'New Suite',
+      }),
+    ).rejects.toThrow(AzureDevOpsError);
+  });
+
   test('should propagate authentication errors', async () => {
     const mockConnection: any = {
       getTestPlanApi: jest.fn().mockResolvedValue({
         createTestSuite: jest
           .fn()
-          .mockRejectedValue(new Error('Unauthorized access')),
+          .mockRejectedValue(
+            new AzureDevOpsAuthenticationError('Unauthorized'),
+          ),
       }),
     };
 
@@ -94,7 +183,9 @@ describe('createTestSuite unit', () => {
       getTestPlanApi: jest.fn().mockResolvedValue({
         createTestSuite: jest
           .fn()
-          .mockRejectedValue(new Error('Plan not found')),
+          .mockRejectedValue(
+            new AzureDevOpsResourceNotFoundError('Plan not found'),
+          ),
       }),
     };
 
